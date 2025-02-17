@@ -17,27 +17,37 @@ def get_headers():
     return {"User-Api-Key": token}
 
 
-def print(p, categories):
-    rich.print(
-        textwrap.dedent(f"""
+def get_post_formated(p, categories, headers):
+    return textwrap.dedent(f"""\
         [bold]{p["topic_title"]}[/bold]
-        [green]{get_category_name(p["category_id"], categories)}[/green]
-        {BASE_URL}/t/{p['topic_slug']}
-        {p["name"]}""")
-    )
+        {get_category_format(p["category_id"], categories, headers)}
+        [green]/u/{p["username"]}[/green] [orange]/t/{p['topic_slug']}[/orange]
+        """)
+
+
+def show_category(id, headers):
+    resp = requests.get(f"{BASE_URL}/c/{id}/show.json", headers=headers)
+    resp.raise_for_status()
+    return resp.json()["category"]
 
 
 def list_categories(headers):
-    resp = requests.get(f"{BASE_URL}/categories.json", headers=headers)
+    resp = requests.get(
+        f"{BASE_URL}/categories.json",
+        params={"include_subcategories": True},
+        headers=headers,
+    )
     resp.raise_for_status()
     data = resp.json()["category_list"]["categories"]
     return data
 
 
-def get_category_name(id, categories):
+def get_category_format(id, categories, headers):
     ids = list(map(lambda x: x["id"], categories))
-    try:
+    category = None
+    if id in ids:
         idx = ids.index(id)
-    except ValueError:
-        return ""
-    return categories[idx]["name"]
+        category = categories[idx]
+    else:
+        category = show_category(id, headers)
+    return f"[#{category['color']}]{category['name']}[/#{category['color']}]"
