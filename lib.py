@@ -21,8 +21,21 @@ def get_post_formated(p, categories, headers):
     return textwrap.dedent(f"""\
         [bold]{p["topic_title"]}[/bold]
         {get_category_format(p["category_id"], categories, headers)}
-        [green]/u/{p["username"]}[/green] [orange]/t/{p['topic_slug']}[/orange]
+        [green]/u/{p["username"]}[/green] [orange]/t/{p["topic_slug"]}[/orange]
+                           {p["topic_id"]}
         """)
+
+
+def get_topic_id(id, headers):
+    resp = requests.get(f"{BASE_URL}/t/{id}.json", headers=headers)
+    resp.raise_for_status()
+    return resp.json()
+
+
+def get_post_id(id, headers):
+    resp = requests.get(f"{BASE_URL}/posts/{id}.json", headers=headers)
+    resp.raise_for_status()
+    return resp.json()
 
 
 def show_category(id, headers):
